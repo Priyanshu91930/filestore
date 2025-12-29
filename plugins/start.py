@@ -44,10 +44,28 @@ async def start_command(client: Client, message: Message):
         # 3. Check premium status
         is_user_pro = await client.mongodb.is_pro(user_id)
         
-        # 4. Check if shortner is enabled
+        # 4. Premium-only access check
+        from config import PREMIUM_ONLY_MODE
+        if PREMIUM_ONLY_MODE and not is_user_pro and user_id != OWNER_ID and not is_short_link:
+            premium_msg = (
+                "⚠️ **Premium Access Required** ⚠️\n\n"
+                "This link requires premium access to view files.\n\n"
+                "**Options to get Premium access:**\n"
+                "1️⃣ Purchase a premium plan\n\n"
+                "Upgrade now to unlock all content!"
+            )
+            await message.reply(
+                premium_msg,
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("🌟 Get Premium", callback_data="get_premium")]
+                ])
+            )
+            return
+        
+        # 5. Check if shortner is enabled
         shortner_enabled = getattr(client, 'shortner_enabled', True)
 
-        # 5. If user is not premium AND shortner is enabled, send short URL and return
+        # 6. If user is not premium AND shortner is enabled, send short URL and return
         if not is_user_pro and user_id != OWNER_ID and not is_short_link and shortner_enabled:
             try:
                 short_link = get_short(f"https://t.me/{client.username}?start=yu3elk{base64_string}7", client)
@@ -75,7 +93,7 @@ async def start_command(client: Client, message: Message):
             )
             return  # prevent sending actual files
 
-        # 6. Decode and prepare file IDs
+        # 7. Decode and prepare file IDs
         try:
             string = await decode(base64_string)
             argument = string.split("-")
@@ -160,7 +178,7 @@ async def start_command(client: Client, message: Message):
             client.LOGGER(__name__, client.name).warning(f"Error decoding base64: {e}")
             return await message.reply("⚠️ Invalid or expired link.")
 
-        # 7. Get messages from the specific source channel first
+        # 8. Get messages from the specific source channel first
         temp_msg = await message.reply("Wait A Sec..")
         messages = []
 
@@ -235,7 +253,7 @@ async def start_command(client: Client, message: Message):
                 client.LOGGER(__name__, client.name).warning(f"Failed to send message: {e}")
                 pass
 
-        # 8. Auto delete timer
+        # 9. Auto delete timer
         if messages and client.auto_del > 0:
             # Create transfer link for getting files again (original base64_string)
             transfer_link = original_payload
@@ -251,7 +269,7 @@ async def start_command(client: Client, message: Message):
             ))
         return
 
-    # 9. Normal start message
+    # 10. Normal start message
     else:
         buttons = [[InlineKeyboardButton("Help", callback_data="about"), InlineKeyboardButton("Close", callback_data='close')]]
         if user_id in client.admins:
