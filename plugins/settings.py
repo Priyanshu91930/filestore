@@ -756,5 +756,11 @@ async def premium_users(client, query):
         [InlineKeyboardButton('‹ ʙᴀᴄᴋ', 'settings')]
     ])
     
-    await query.message.edit_text(msg, reply_markup=reply_markup)
+    try:
+        await query.message.edit_text(msg, reply_markup=reply_markup)
+    except Exception as e:
+        # Ignore if message is not modified (same content)
+        if "MESSAGE_NOT_MODIFIED" not in str(e):
+            raise
+        await query.answer("✓ ᴀʟʀᴇᴀᴅʏ ᴜᴘ ᴛᴏ ᴅᴀᴛᴇ!", show_alert=False)
     return
