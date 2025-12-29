@@ -604,6 +604,7 @@ __ᴜsᴇ ᴛʜᴇ ʙᴜᴛᴛᴏɴs ʙᴇʟᴏᴡ ᴛᴏ ᴍᴀɴᴀɢᴇ sᴇ�
     reply_markup = InlineKeyboardMarkup([
         [InlineKeyboardButton(f'{"✗ ᴅɪsᴀʙʟᴇ" if FREE_ACCESS_ENABLED else "✓ ᴇɴᴀʙʟᴇ"} ғʀᴇᴇ ᴀᴄᴄᴇss', 'toggle_free_access')],
         [InlineKeyboardButton('🔗 ᴄʜᴀɴɢᴇ sʜᴏʀᴛʟɪɴᴋ ᴜʀʟ', 'change_shortlink_url'), InlineKeyboardButton('🔑 ᴄʜᴀɴɢᴇ ᴀᴘɪ', 'change_shortlink_api')],
+        [InlineKeyboardButton('⏰ ᴄʜᴀɴɢᴇ ᴠᴀʟɪᴅɪᴛʏ', 'change_token_validity')],
         [InlineKeyboardButton('🔄 ʀᴇғʀᴇsʜ sᴛᴀᴛs', 'token_access')],
         [InlineKeyboardButton('‹ ʙᴀᴄᴋ', 'settings')]
     ])
