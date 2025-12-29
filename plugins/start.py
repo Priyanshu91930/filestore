@@ -44,6 +44,36 @@ async def start_command(client: Client, message: Message):
         # Handle token verification callback
         if base64_string.startswith("token_"):
             from config import TOKEN_VALIDITY_HOURS
+            
+            # Extract user_id from token
+            try:
+                parts = base64_string.split("_")
+                if len(parts) >= 3:
+                    token_user_id = int(parts[1])
+                else:
+                    await message.reply("❌ **Invalid token format!**")
+                    return
+            except (ValueError, IndexError):
+                await message.reply("❌ **Invalid token format!**")
+                return
+            
+            # Verify token belongs to this user
+            if token_user_id != user_id:
+                await message.reply(
+                    "❌ **Invalid Token!**\n\n"
+                    "This token belongs to another user. Please generate your own token."
+                )
+                return
+            
+            # Check if user already has active token access
+            has_valid_token = await client.mongodb.check_token_validity(user_id)
+            if has_valid_token:
+                await message.reply(
+                    "✅ **You already have active token access!**\n\n"
+                    f"Your current access is still valid. No need to verify again."
+                )
+                return
+            
             # Grant token access
             await client.mongodb.grant_token_access(user_id, TOKEN_VALIDITY_HOURS)
             await message.reply(
