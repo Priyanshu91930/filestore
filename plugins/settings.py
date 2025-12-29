@@ -737,8 +737,15 @@ async def premium_users(client, query):
     
     if premium_users_list:
         from datetime import datetime
-        for user_id in premium_users_list[:20]:  # Show first 20
+        for user_id in premium_users_list[:15]:  # Show first 15
             try:
+                # Try to get user info
+                try:
+                    user = await client.get_users(user_id)
+                    username = f"@{user.username}" if user.username else user.first_name or "ɴᴏ ɴᴀᴍᴇ"
+                except:
+                    username = "ᴜɴᴋɴᴏᴡɴ"
+                
                 expiry = await client.mongodb.get_expiry_date(user_id)
                 if expiry:
                     days_left = (expiry - datetime.now()).days
@@ -746,12 +753,12 @@ async def premium_users(client, query):
                 else:
                     expiry_str = "ᴘᴇʀᴍᴀɴᴇɴᴛ"
                 
-                msg += f"• `{user_id}` - {expiry_str}\n"
+                msg += f"• `{user_id}` ({username}) - {expiry_str}\n"
             except:
-                msg += f"• `{user_id}` - ᴜɴᴋɴᴏᴡɴ\n"
+                msg += f"• `{user_id}` - ᴇʀʀᴏʀ\n"
         
-        if len(premium_users_list) > 20:
-            msg += f"\n_...ᴀɴᴅ {len(premium_users_list) - 20} ᴍᴏʀᴇ_"
+        if len(premium_users_list) > 15:
+            msg += f"\n_...ᴀɴᴅ {len(premium_users_list) - 15} ᴍᴏʀᴇ_"
     else:
         msg += "_ɴᴏ ᴘᴀɪᴅ ᴘʀᴇᴍɪᴜᴍ ᴜsᴇʀs_"
     
