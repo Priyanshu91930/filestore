@@ -778,3 +778,60 @@ async def premium_users(client, query):
             raise
         await query.answer("✓ ᴀʟʀᴇᴀᴅʏ ᴜᴘ ᴛᴏ ᴅᴀᴛᴇ!", show_alert=False)
     return
+
+#===============================================================#
+
+@Client.on_callback_query(filters.regex("^change_token_validity$"))
+async def change_token_validity(client, query):
+    """Change token validity hours"""
+    if query.from_user.id != OWNER_ID:
+        return await query.answer('✗ ᴏɴʟʏ ᴏᴡɴᴇʀ ᴄᴀɴ ᴜsᴇ ᴛʜɪs!', show_alert=True)
+    
+    await query.answer()
+    from config import TOKEN_VALIDITY_HOURS
+    
+    msg = f"""<blockquote>✦ ᴄʜᴀɴɢᴇ ᴛᴏᴋᴇɴ ᴠᴀʟɪᴅɪᴛʏ</blockquote>
+**ᴄᴜʀʀᴇɴᴛ ᴠᴀʟɪᴅɪᴛʏ:** `{TOKEN_VALIDITY_HOURS} ʜᴏᴜʀs`
+
+__sᴇɴᴅ ᴛʜᴇ ɴᴇᴡ ᴠᴀʟɪᴅɪᴛʏ ɪɴ ʜᴏᴜʀs (ᴇ.ɢ., 6, 12, 24) ɪɴ ᴛʜᴇ ɴᴇxᴛ 60 sᴇᴄᴏɴᴅs!__
+
+**ᴇxᴀᴍᴘʟᴇs:**
+• `6` - 6 hours
+• `12` - 12 hours  
+• `24` - 24 hours"""
+    
+    await query.message.edit_text(msg, reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('‹ ʙᴀᴄᴋ', 'token_access')]]))
+    
+    try:
+        res = await client.listen(user_id=query.from_user.id, filters=filters.text, timeout=60)
+        new_hours = res.text.strip()
+        
+        # Validate input
+        if not new_hours.isdigit():
+            await query.message.edit_text(
+                "❌ **ɪɴᴠᴀʟɪᴅ ɪɴᴘᴜᴛ!**\n\nᴘʟᴇᴀsᴇ sᴇɴᴅ ᴀ ɴᴜᴍʙᴇʀ (ᴇ.ɢ., 6, 12, 24)",
+                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('‹ ʙᴀᴄᴋ', 'token_access')]])
+            )
+            return
+        
+        new_hours = int(new_hours)
+        if new_hours < 1 or new_hours > 720:  # Max 30 days
+            await query.message.edit_text(
+                "❌ **ɪɴᴠᴀʟɪᴅ ʀᴀɴɢᴇ!**\n\nᴘʟᴇᴀsᴇ ᴇɴᴛᴇʀ ᴀ ᴠᴀʟᴜᴇ ʙᴇᴛᴡᴇᴇɴ 1 ᴀɴᴅ 720 ʜᴏᴜʀs (30 ᴅᴀʏs)",
+                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('‹ ʙᴀᴄᴋ', 'token_access')]])
+            )
+            return
+        
+        # Update in config module
+        import config
+        config.TOKEN_VALIDITY_HOURS = new_hours
+        
+        await query.message.edit_text(
+            f"✅ **ᴛᴏᴋᴇɴ ᴠᴀʟɪᴅɪᴛʏ ᴜᴘᴅᴀᴛᴇᴅ!**\n\n**ɴᴇᴡ ᴠᴀʟɪᴅɪᴛʏ:** `{new_hours} ʜᴏᴜʀs`\n\n__ɴᴇᴡ ᴛᴏᴋᴇɴs ᴡɪʟʟ ʜᴀᴠᴇ {new_hours} ʜᴏᴜʀs ᴠᴀʟɪᴅɪᴛʏ__",
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('‹ ʙᴀᴄᴋ', 'token_access')]])
+        )
+    except ListenerTimeout:
+        await query.message.edit_text(
+            "**ᴛɪᴍᴇᴏᴜᴛ!** ᴛʀʏ ᴀɢᴀɪɴ.",
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('‹ ʙᴀᴄᴋ', 'token_access')]])
+        )
