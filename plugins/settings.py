@@ -584,19 +584,26 @@ async def token_access(client, query):
     from config import FREE_ACCESS_ENABLED, TOKEN_VALIDITY_HOURS
     token_stats = await client.mongodb.get_token_stats()
     
+    # Get shortlink settings
+    shortlink_url = getattr(client, 'short_url', 'ɴᴏᴛ sᴇᴛ')
+    shortlink_api = getattr(client, 'short_api', 'ɴᴏᴛ sᴇᴛ')
+    
     msg = f"""<blockquote>✦ ᴛᴏᴋᴇɴ ᴀᴄᴄᴇss sᴇᴛᴛɪɴɢs</blockquote>
 ›› **ғʀᴇᴇ ᴀᴄᴄᴇss:** `{"✓ ᴇɴᴀʙʟᴇᴅ" if FREE_ACCESS_ENABLED else "✗ ᴅɪsᴀʙʟᴇᴅ"}`
 ›› **ᴛᴏᴋᴇɴ ᴠᴀʟɪᴅɪᴛʏ:** `{TOKEN_VALIDITY_HOURS} ʜᴏᴜʀs`
+›› **sʜᴏʀᴛʟɪɴᴋ ᴜʀʟ:** `{shortlink_url}`
+›› **sʜᴏʀᴛʟɪɴᴋ ᴀᴘɪ:** `{shortlink_api[:20]}...` 
+
+**ᴛᴏᴋᴇɴ sᴛᴀᴛɪsᴛɪᴄs:**
 ›› **ᴛᴏᴛᴀʟ ᴛᴏᴋᴇɴs:** `{token_stats.get('total_tokens', 0)}`
 ›› **ᴀᴄᴛɪᴠᴇ ᴛᴏᴋᴇɴs:** `{token_stats.get('active_tokens', 0)}`
 ›› **ᴇxᴘɪʀᴇᴅ ᴛᴏᴋᴇɴs:** `{token_stats.get('expired_tokens', 0)}`
 
-__ᴜsᴇ ᴛʜᴇ ʙᴜᴛᴛᴏɴs ʙᴇʟᴏᴡ ᴛᴏ ᴍᴀɴᴀɢᴇ ᴛᴏᴋᴇɴ sᴇᴛᴛɪɴɢs!__
-
-**ɴᴏᴛᴇ:** ᴛᴏ ᴄʜᴀɴɢᴇ ᴠᴀʟɪᴅɪᴛʏ ʜᴏᴜʀs, ᴇᴅɪᴛ `TOKEN_VALIDITY_HOURS` ɪɴ ᴄᴏɴғɪɢ.ᴘʏ"""
+__ᴜsᴇ ᴛʜᴇ ʙᴜᴛᴛᴏɴs ʙᴇʟᴏᴡ ᴛᴏ ᴍᴀɴᴀɢᴇ sᴇᴛᴛɪɴɢs!__"""
     
     reply_markup = InlineKeyboardMarkup([
         [InlineKeyboardButton(f'{"✗ ᴅɪsᴀʙʟᴇ" if FREE_ACCESS_ENABLED else "✓ ᴇɴᴀʙʟᴇ"} ғʀᴇᴇ ᴀᴄᴄᴇss', 'toggle_free_access')],
+        [InlineKeyboardButton('🔗 ᴄʜᴀɴɢᴇ sʜᴏʀᴛʟɪɴᴋ ᴜʀʟ', 'change_shortlink_url'), InlineKeyboardButton('🔑 ᴄʜᴀɴɢᴇ ᴀᴘɪ', 'change_shortlink_api')],
         [InlineKeyboardButton('🔄 ʀᴇғʀᴇsʜ sᴛᴀᴛs', 'token_access')],
         [InlineKeyboardButton('‹ ʙᴀᴄᴋ', 'settings')]
     ])
@@ -621,6 +628,82 @@ async def toggle_free_access(client, query):
     # Refresh the token access page
     await token_access(client, query)
     return
+
+#===============================================================#
+
+@Client.on_callback_query(filters.regex("^change_shortlink_url$"))
+async def change_shortlink_url(client, query):
+    """Change shortlink URL"""
+    if query.from_user.id != OWNER_ID:
+        return await query.answer('✗ ᴏɴʟʏ ᴏᴡɴᴇʀ ᴄᴀɴ ᴜsᴇ ᴛʜɪs!', show_alert=True)
+    
+    await query.answer()
+    current_url = getattr(client, 'short_url', 'ɴᴏᴛ sᴇᴛ')
+    
+    msg = f"""<blockquote>✦ ᴄʜᴀɴɢᴇ sʜᴏʀᴛʟɪɴᴋ ᴜʀʟ</blockquote>
+**ᴄᴜʀʀᴇɴᴛ ᴜʀʟ:** `{current_url}`
+
+__sᴇɴᴅ ᴛʜᴇ ɴᴇᴡ sʜᴏʀᴛʟɪɴᴋ ᴜʀʟ (ᴇ.ɢ., vplink.in) ɪɴ ᴛʜᴇ ɴᴇxᴛ 60 sᴇᴄᴏɴᴅs!__
+
+**ᴇxᴀᴍᴘʟᴇ:** `vplink.in`"""
+    
+    await query.message.edit_text(msg, reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('‹ ʙᴀᴄᴋ', 'token_access')]]))
+    
+    try:
+        res = await client.listen(user_id=query.from_user.id, filters=filters.text, timeout=60)
+        new_url = res.text.strip()
+        
+        # Update in client and database
+        client.short_url = new_url
+        await client.mongodb.update_shortner_setting('short_url', new_url)
+        
+        await query.message.edit_text(
+            f"✅ **sʜᴏʀᴛʟɪɴᴋ ᴜʀʟ ᴜᴘᴅᴀᴛᴇᴅ!**\n\n**ɴᴇᴡ ᴜʀʟ:** `{new_url}`",
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('‹ ʙᴀᴄᴋ', 'token_access')]])
+        )
+    except ListenerTimeout:
+        await query.message.edit_text(
+            "**ᴛɪᴍᴇᴏᴜᴛ!** ᴛʀʏ ᴀɢᴀɪɴ.",
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('‹ ʙᴀᴄᴋ', 'token_access')]])
+        )
+
+#===============================================================#
+
+@Client.on_callback_query(filters.regex("^change_shortlink_api$"))
+async def change_shortlink_api(client, query):
+    """Change shortlink API key"""
+    if query.from_user.id != OWNER_ID:
+        return await query.answer('✗ ᴏɴʟʏ ᴏᴡɴᴇʀ ᴄᴀɴ ᴜsᴇ ᴛʜɪs!', show_alert=True)
+    
+    await query.answer()
+    current_api = getattr(client, 'short_api', 'ɴᴏᴛ sᴇᴛ')
+    
+    msg = f"""<blockquote>✦ ᴄʜᴀɴɢᴇ sʜᴏʀᴛʟɪɴᴋ ᴀᴘɪ ᴋᴇʏ</blockquote>
+**ᴄᴜʀʀᴇɴᴛ ᴀᴘɪ:** `{current_api[:20]}...`
+
+__sᴇɴᴅ ᴛʜᴇ ɴᴇᴡ sʜᴏʀᴛʟɪɴᴋ ᴀᴘɪ ᴋᴇʏ ɪɴ ᴛʜᴇ ɴᴇxᴛ 60 sᴇᴄᴏɴᴅs!__
+
+**ᴇxᴀᴍᴘʟᴇ:** `35591ad98834a002e1fe0b3b4acc6d84ef401782`"""
+    
+    await query.message.edit_text(msg, reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('‹ ʙᴀᴄᴋ', 'token_access')]]))
+    
+    try:
+        res = await client.listen(user_id=query.from_user.id, filters=filters.text, timeout=60)
+        new_api = res.text.strip()
+        
+        # Update in client and database
+        client.short_api = new_api
+        await client.mongodb.update_shortner_setting('short_api', new_api)
+        
+        await query.message.edit_text(
+            f"✅ **sʜᴏʀᴛʟɪɴᴋ ᴀᴘɪ ᴋᴇʏ ᴜᴘᴅᴀᴛᴇᴅ!**\n\n**ɴᴇᴡ ᴀᴘɪ:** `{new_api[:20]}...`",
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('‹ ʙᴀᴄᴋ', 'token_access')]])
+        )
+    except ListenerTimeout:
+        await query.message.edit_text(
+            "**ᴛɪᴍᴇᴏᴜᴛ!** ᴛʀʏ ᴀɢᴀɪɴ.",
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('‹ ʙᴀᴄᴋ', 'token_access')]])
+        )
 
 #===============================================================#
 
