@@ -763,7 +763,40 @@ async def premium_users(client, query):
     else:
         msg += "_ɴᴏ ᴘᴀɪᴅ ᴘʀᴇᴍɪᴜᴍ ᴜsᴇʀs_"
     
+    # Get and display active token users
+    token_users = await client.mongodb.get_active_token_users()
+    msg += "\n\n**ғʀᴇᴇ ᴀᴄᴄᴇss ᴛᴏᴋᴇɴ ᴜsᴇʀs:**\n"
+    
+    if token_users:
+        from datetime import datetime
+        for token_user in token_users[:10]:  # Show first 10
+            try:
+                user_id = token_user["user_id"]
+                expiry = token_user["expiry"]
+                
+                # Try to get user info
+                try:
+                    user = await client.get_users(user_id)
+                    username = f"@{user.username}" if user.username else user.first_name or "ɴᴏ ɴᴀᴍᴇ"
+                except:
+                    username = "ᴜɴᴋɴᴏᴡɴ"
+                
+                # Calculate time remaining
+                time_left = expiry - datetime.now()
+                hours_left = int(time_left.total_seconds() / 3600)
+                expiry_str = f"{hours_left}ʜ" if hours_left > 0 else "ᴇxᴘɪʀᴇᴅ"
+                
+                msg += f"• `{user_id}` ({username}) - {expiry_str}\n"
+            except:
+                msg += f"• ᴇʀʀᴏʀ\n"
+        
+        if len(token_users) > 10:
+            msg += f"\n_...ᴀɴᴅ {len(token_users) - 10} ᴍᴏʀᴇ_"
+    else:
+        msg += "_ɴᴏ ᴀᴄᴛɪᴠᴇ ᴛᴏᴋᴇɴ ᴜsᴇʀs_"
+    
     msg += "\n\n__ᴜsᴇ /addpremium ᴛᴏ ᴀᴅᴅ ᴘʀᴇᴍɪᴜᴍ ᴜsᴇʀs__"
+    msg += "\n__ᴜsᴇ /deltoken ᴛᴏ ʀᴇᴍᴏᴠᴇ ᴛᴏᴋᴇɴ ᴀᴄᴄᴇss__"
     
     reply_markup = InlineKeyboardMarkup([
         [InlineKeyboardButton('🔄 ʀᴇғʀᴇsʜ', 'premium_users')],

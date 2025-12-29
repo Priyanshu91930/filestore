@@ -793,3 +793,23 @@ class MongoDB:
             "active_tokens": active_tokens,
             "expired_tokens": total_tokens - active_tokens
         }
+
+    async def get_active_token_users(self) -> list:
+        """Get list of users with active tokens"""
+        current_time = datetime.now()
+        cursor = self.user_data.find({
+            "_id": {"$regex": "^token_"},
+            "expiry": {"$gt": current_time}
+        })
+        
+        active_users = []
+        async for doc in cursor:
+            user_id = doc.get("user_id")
+            expiry = doc.get("expiry")
+            if user_id:
+                active_users.append({
+                    "user_id": user_id,
+                    "expiry": expiry
+                })
+        
+        return active_users
