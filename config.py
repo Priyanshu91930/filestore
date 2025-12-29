@@ -54,7 +54,7 @@ PREMIUM_PLANS = {
 }
 
 # Free Access Token Settings
-FREE_ACCESS_ENABLED = False  # Disable free token verification when shortener is off
+FREE_ACCESS_ENABLED = True  # Enable/disable free token verification
 TOKEN_VALIDITY_HOURS = 6  # How long token access lasts (in hours)
 TOKEN_SHORTLINK_URL = SHORT_URL  # Use same shortlink service
 TOKEN_SHORTLINK_API = SHORT_API  # Use same API key
