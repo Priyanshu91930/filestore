@@ -56,8 +56,9 @@ PREMIUM_PLANS = {
 # Free Access Token Settings
 FREE_ACCESS_ENABLED = True  # Enable/disable free token verification
 TOKEN_VALIDITY_HOURS = 6  # How long token access lasts (in hours)
-TOKEN_SHORTLINK_URL = SHORT_URL  # Use same shortlink service
-TOKEN_SHORTLINK_API = SHORT_API  # Use same API key
+# Token verification uses its own shortlink (independent from file shortener)
+TOKEN_SHORTLINK_URL = "vplink.in"  # Shortlink service for token verification
+TOKEN_SHORTLINK_API = "35591ad98834a002e1fe0b3b4acc6d84ef401782"  # API key for token verification
 
 # Messages Configuration
 MESSAGES = {

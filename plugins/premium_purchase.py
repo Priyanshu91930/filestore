@@ -188,7 +188,7 @@ async def get_free_access_callback(client: Client, callback_query: CallbackQuery
     """Show free access token verification"""
     await callback_query.answer()
     
-    from config import TOKEN_VALIDITY_HOURS
+    from config import TOKEN_VALIDITY_HOURS, TOKEN_SHORTLINK_URL, TOKEN_SHORTLINK_API
     from plugins.shortner import get_short
     import time
     
@@ -198,24 +198,34 @@ async def get_free_access_callback(client: Client, callback_query: CallbackQuery
     token_id = f"token_{user_id}_{int(time.time())}"
     token_link = f"https://t.me/{client.username}?start={token_id}"
     
-    # Create shortlink for token verification using database-loaded settings
-    # Settings are loaded in bot.py from database (client.short_url, client.short_api)
+    # Create shortlink for token verification
     try:
-        short_link = get_short(token_link, client)
+        # Use dedicated token shortlink settings (independent from file shortener)
+        import requests
+        import random
+        import string
         
-        # Verify shortlink was actually generated (not just returned original URL)
-        if short_link == token_link:
+        def generate_random_alias():
+            return ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(8))
+        
+        alias = generate_random_alias()
+        api_url = f"https://{TOKEN_SHORTLINK_URL}/api?api={TOKEN_SHORTLINK_API}&url={token_link}&alias={alias}"
+        
+        response = requests.get(api_url, timeout=10)
+        rjson = response.json()
+        
+        if rjson.get("status") == "success" and response.status_code == 200:
+            short_link = rjson.get("shortenedUrl", token_link)
+        else:
             # Shortlink generation failed, show error
-            shortlink_url = getattr(client, 'short_url', 'not configured')
             await callback_query.message.edit_text(
                 "❌ **Shortlink Service Error**\n\n"
                 "The shortlink service is currently unavailable. "
                 "Please contact the admin or try again later.\n\n"
-                f"**Error:** Shortlink API ({shortlink_url}) is not responding.\n\n"
-                "**Admin:** Configure shortlink via /shortner command",
+                f"**Error:** {rjson.get('message', 'Unknown error')}",
                 reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("« Back", callback_data="close")]])
             )
-            client.LOGGER(__name__, client.name).error(f"Shortlink generation failed for token verification. URL: {shortlink_url}")
+            client.LOGGER(__name__, client.name).error(f"Token shortlink generation failed: {rjson}")
             return
             
     except Exception as e:
