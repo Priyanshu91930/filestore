@@ -157,3 +157,37 @@ async def admin_list_command(client: Client, message: Message):
     else:
         await message.reply_text("<b>No premium users found.</b>")
 
+#========================================================================#
+
+@Client.on_message(filters.command('deltoken') & filters.private)
+async def remove_token_command(client: Client, message: Message):
+    if message.from_user.id != OWNER_ID:
+        return await message.reply_text("Only Owner can use this command...!")
+
+    if len(message.command) != 2:
+        return await message.reply_text("<b>You're using wrong format do like this:</b> /deltoken <userid>")
+
+    try:
+        user_id_to_remove = int(message.command[1])
+    except ValueError:
+        return await message.reply_text("Invalid user ID. Please check again...!")
+
+    try:
+        user = await client.get_users(user_id_to_remove)
+        user_name = user.first_name + (" " + user.last_name if user.last_name else "")
+    except Exception as e:
+        return await message.reply_text(f"Error fetching user information: {e}")
+
+    # Check if user has token access
+    has_token = await client.mongodb.check_token_validity(user_id_to_remove)
+    
+    if has_token:
+        await client.mongodb.remove_token_access(user_id_to_remove)
+        await message.reply_text(f"<b>Token access removed for {user_name} - {user_id_to_remove}!</b>")
+        try:
+            await client.send_message(user_id_to_remove, "<b>Your free access token has been revoked.\n\nTo get access again, verify through the link or purchase premium.</b>")
+        except Exception as e:
+            await message.reply_text(f"Failed to notify the user: {e}")
+    else:
+        await message.reply_text(f"<b>User {user_name} - {user_id_to_remove} does not have an active token or was not found in the token list.</b>")
+
