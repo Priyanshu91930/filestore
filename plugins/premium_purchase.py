@@ -183,6 +183,51 @@ async def payment_done_callback(client: Client, callback_query: CallbackQuery):
 
 #===============================================================#
 
+@Client.on_callback_query(filters.regex("^get_free_access$"))
+async def get_free_access_callback(client: Client, callback_query: CallbackQuery):
+    """Show free access token verification"""
+    await callback_query.answer()
+    
+    from config import TOKEN_VALIDITY_HOURS
+    from plugins.shortner import get_short
+    import time
+    
+    user_id = callback_query.from_user.id
+    
+    # Generate unique token link
+    token_id = f"token_{user_id}_{int(time.time())}"
+    token_link = f"https://t.me/{client.username}?start={token_id}"
+    
+    # Create shortlink for token verification
+    try:
+        short_link = get_short(token_link, client)
+    except Exception as e:
+        client.LOGGER(__name__, client.name).warning(f"Shortener failed for token: {e}")
+        short_link = token_link
+    
+    free_access_text = (
+        f"🎁 **Get Free Access for {TOKEN_VALIDITY_HOURS} Hours**\n\n"
+        f"**Steps to get free access:**\n"
+        f"1. Click the 'Verify & Get Access' button below\n"
+        f"2. Complete the verification process\n"
+        f"3. You'll be redirected back automatically\n"
+        f"4. Access will be granted for {TOKEN_VALIDITY_HOURS} hours\n\n"
+        f"⏰ After {TOKEN_VALIDITY_HOURS} hours, you'll need to verify again or upgrade to premium for unlimited access."
+    )
+    
+    keyboard = InlineKeyboardMarkup([
+        [InlineKeyboardButton("🔗 Verify & Get Access", url=short_link)],
+        [InlineKeyboardButton("💎 Get Premium Instead", callback_data="get_premium")],
+        [InlineKeyboardButton("« Back", callback_data="close")]
+    ])
+    
+    await callback_query.message.edit_text(
+        free_access_text,
+        reply_markup=keyboard
+    )
+
+#===============================================================#
+
 @Client.on_callback_query(filters.regex("^close$"))
 async def close_callback(client: Client, callback_query: CallbackQuery):
     """Close the message"""

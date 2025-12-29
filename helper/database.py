@@ -741,3 +741,55 @@ class MongoDB:
                 "admins": [],
                 "shortner_settings": {}
             }
+
+    # ✅ TOKEN ACCESS FUNCTIONS
+
+    async def grant_token_access(self, user_id: int, validity_hours: int):
+        """Grant temporary token access to user"""
+        expiry_time = datetime.now() + timedelta(hours=validity_hours)
+        await self.user_data.update_one(
+            {"_id": f"token_{user_id}"},
+            {"$set": {
+                "user_id": user_id,
+                "expiry": expiry_time,
+                "created_at": datetime.now()
+            }},
+            upsert=True
+        )
+
+    async def check_token_validity(self, user_id: int) -> bool:
+        """Check if user has valid token access"""
+        token = await self.user_data.find_one({"_id": f"token_{user_id}"})
+        if not token:
+            return False
+        
+        if token.get("expiry") and token["expiry"] > datetime.now():
+            return True
+        
+        return False
+
+    async def get_token_expiry(self, user_id: int):
+        """Get token expiry time for user"""
+        token = await self.user_data.find_one({"_id": f"token_{user_id}"})
+        if token:
+            return token.get("expiry")
+        return None
+
+    async def remove_token_access(self, user_id: int):
+        """Remove token access for user"""
+        await self.user_data.delete_one({"_id": f"token_{user_id}"})
+
+    async def get_token_stats(self) -> dict:
+        """Get statistics about token access"""
+        total_tokens = await self.user_data.count_documents({"_id": {"$regex": "^token_"}})
+        current_time = datetime.now()
+        active_tokens = await self.user_data.count_documents({
+            "_id": {"$regex": "^token_"},
+            "expiry": {"$gt": current_time}
+        })
+        
+        return {
+            "total_tokens": total_tokens,
+            "active_tokens": active_tokens,
+            "expired_tokens": total_tokens - active_tokens
+        }

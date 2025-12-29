@@ -53,6 +53,12 @@ PREMIUM_PLANS = {
     365: 399   # 12 months
 }
 
+# Free Access Token Settings
+FREE_ACCESS_ENABLED = True  # Enable/disable free token verification
+TOKEN_VALIDITY_HOURS = 6  # How long token access lasts (in hours)
+TOKEN_SHORTLINK_URL = SHORT_URL  # Use same shortlink service
+TOKEN_SHORTLINK_API = SHORT_API  # Use same API key
+
 # Messages Configuration
 MESSAGES = {
     "START": "<b>⚡ Welcome to VIRAL VERSE !</b>\n\n<i>Your gateway to premium content, resources, and links shared by our community.</i>\n\n<b>🔥 Features:</b>\n• 📸 Browse posts with images, videos & audio\n• ❤️ React with emojis\n• 💬 Comment and engage with the community\n• 🔗 Share posts with friends\n\n\n<b>👇 Click the button below to open the app!</b>",

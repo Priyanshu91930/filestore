@@ -41,26 +41,52 @@ async def start_command(client: Client, message: Message):
         except IndexError:
             return await message.reply("Invalid command format.")
 
+        # Handle token verification callback
+        if base64_string.startswith("token_"):
+            from config import TOKEN_VALIDITY_HOURS
+            # Grant token access
+            await client.mongodb.grant_token_access(user_id, TOKEN_VALIDITY_HOURS)
+            await message.reply(
+                f"✅ **Token Verified Successfully!**\n\n"
+                f"You now have free access for **{TOKEN_VALIDITY_HOURS} hours**.\n\n"
+                f"After {TOKEN_VALIDITY_HOURS} hours, you'll need to verify again or upgrade to premium for unlimited access."
+            )
+            return
+
         # 3. Check premium status
         is_user_pro = await client.mongodb.is_pro(user_id)
         
         # 4. Premium-only access check
-        from config import PREMIUM_ONLY_MODE
+        from config import PREMIUM_ONLY_MODE, FREE_ACCESS_ENABLED
         if PREMIUM_ONLY_MODE and not is_user_pro and user_id != OWNER_ID and not is_short_link:
-            premium_msg = (
-                "⚠️ **Premium Access Required** ⚠️\n\n"
-                "This link requires premium access to view files.\n\n"
-                "**Options to get Premium access:**\n"
-                "1️⃣ Purchase a premium plan\n\n"
-                "Upgrade now to unlock all content!"
-            )
-            await message.reply(
-                premium_msg,
-                reply_markup=InlineKeyboardMarkup([
-                    [InlineKeyboardButton("🌟 Get Premium", callback_data="get_premium")]
-                ])
-            )
-            return
+            # Check if user has valid token access
+            has_valid_token = await client.mongodb.check_token_validity(user_id) if FREE_ACCESS_ENABLED else False
+            
+            if not has_valid_token:
+                # Show both free and premium options
+                premium_msg = (
+                    "⚠️ **Premium Access Required** ⚠️\n\n"
+                    "This link requires premium access to view files.\n\n"
+                    "**Options to get Premium access:**\n"
+                )
+                
+                buttons = []
+                if FREE_ACCESS_ENABLED:
+                    premium_msg += "1️⃣ Get Free Access (Token Verification)\n"
+                    premium_msg += "2️⃣ Purchase a premium plan\n\n"
+                    premium_msg += "Choose your preferred option below!"
+                    buttons.append([InlineKeyboardButton("🎁 Get Free Access", callback_data="get_free_access")])
+                    buttons.append([InlineKeyboardButton("🌟 Get Premium", callback_data="get_premium")])
+                else:
+                    premium_msg += "1️⃣ Purchase a premium plan\n\n"
+                    premium_msg += "Upgrade now to unlock all content!"
+                    buttons.append([InlineKeyboardButton("🌟 Get Premium", callback_data="get_premium")])
+                
+                await message.reply(
+                    premium_msg,
+                    reply_markup=InlineKeyboardMarkup(buttons)
+                )
+                return
         
         # 5. Check if shortner is enabled
         shortner_enabled = getattr(client, 'shortner_enabled', True)
