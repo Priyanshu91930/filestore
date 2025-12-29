@@ -133,19 +133,24 @@ async def start_command(client: Client, message: Message):
             short_caption = client.messages.get("SHORT_MSG", "")
             tutorial_link = getattr(client, 'tutorial_link', "https://t.me/How_to_Download_7x/26")
 
+            # Validate URLs before creating buttons
+            buttons = []
+            if short_link and short_link.startswith("http"):
+                buttons.append(InlineKeyboardButton("• ᴏᴘᴇɴ ʟɪɴᴋ", url=short_link))
+            
+            if tutorial_link and tutorial_link.startswith("http"):
+                buttons.append(InlineKeyboardButton("ᴛᴜᴛᴏʀɪᴀʟ •", url=tutorial_link))
+            
+            # Add premium button
+            buttons_row2 = [InlineKeyboardButton(" • ʙᴜʏ ᴘʀᴇᴍɪᴜᴍ •", url="https://t.me/Premium_Fliix/21")]
+            
+            reply_markup = InlineKeyboardMarkup([buttons, buttons_row2]) if buttons else InlineKeyboardMarkup([buttons_row2])
+
             await client.send_photo(
                 chat_id=message.chat.id,
                 photo=short_photo,
                 caption=short_caption,
-                reply_markup=InlineKeyboardMarkup([
-                    [
-                        InlineKeyboardButton("• ᴏᴘᴇɴ ʟɪɴᴋ", url=short_link),
-                        InlineKeyboardButton("ᴛᴜᴛᴏʀɪᴀʟ •", url=tutorial_link)
-                    ],
-                    [
-                        InlineKeyboardButton(" • ʙᴜʏ ᴘʀᴇᴍɪᴜᴍ •", url="https://t.me/Premium_Fliix/21")
-                    ]
-                ])
+                reply_markup=reply_markup
             )
             return  # prevent sending actual files
 
