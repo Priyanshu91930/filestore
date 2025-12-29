@@ -188,7 +188,7 @@ async def get_free_access_callback(client: Client, callback_query: CallbackQuery
     """Show free access token verification"""
     await callback_query.answer()
     
-    from config import TOKEN_VALIDITY_HOURS
+    from config import TOKEN_VALIDITY_HOURS, TOKEN_SHORTLINK_URL, TOKEN_SHORTLINK_API
     from plugins.shortner import get_short
     import time
     
@@ -200,10 +200,34 @@ async def get_free_access_callback(client: Client, callback_query: CallbackQuery
     
     # Create shortlink for token verification
     try:
+        # Ensure shortlink settings are available
+        if not hasattr(client, 'short_url') or not hasattr(client, 'short_api'):
+            client.short_url = TOKEN_SHORTLINK_URL
+            client.short_api = TOKEN_SHORTLINK_API
+        
         short_link = get_short(token_link, client)
+        
+        # Verify shortlink was actually generated (not just returned original URL)
+        if short_link == token_link:
+            # Shortlink generation failed, show error
+            await callback_query.message.edit_text(
+                "❌ **Shortlink Service Error**\n\n"
+                "The shortlink service is currently unavailable. "
+                "Please contact the admin or try again later.\n\n"
+                f"**Error:** Shortlink API ({TOKEN_SHORTLINK_URL}) is not responding.",
+                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("« Back", callback_data="close")]])
+            )
+            client.LOGGER(__name__, client.name).error(f"Shortlink generation failed for token verification. URL: {TOKEN_SHORTLINK_URL}, API: {TOKEN_SHORTLINK_API[:10]}...")
+            return
+            
     except Exception as e:
-        client.LOGGER(__name__, client.name).warning(f"Shortener failed for token: {e}")
-        short_link = token_link
+        client.LOGGER(__name__, client.name).error(f"Shortener failed for token: {e}")
+        await callback_query.message.edit_text(
+            "❌ **Error**\n\n"
+            "Failed to generate verification link. Please try again later or contact admin.",
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("« Back", callback_data="close")]])
+        )
+        return
     
     free_access_text = (
         f"🎁 **Get Free Access for {TOKEN_VALIDITY_HOURS} Hours**\n\n"
