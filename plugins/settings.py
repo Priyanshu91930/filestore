@@ -17,28 +17,25 @@ async def settings(client, query):
     total_db_channels = len(getattr(client, 'db_channels', {}))
     primary_db = getattr(client, 'primary_db_channel', client.db)
     
-    # Get token settings
+    # Get token settings and premium users
     from config import FREE_ACCESS_ENABLED, TOKEN_VALIDITY_HOURS
     token_stats = await client.mongodb.get_token_stats()
+    premium_users = await client.mongodb.get_pros_list()
     
     msg = f"""<blockquote>✦ sᴇᴛᴛɪɴɢs ᴏғ @{client.username}</blockquote>
 ›› **ꜰꜱᴜʙ ᴄʜᴀɴɴᴇʟs:** `{total_fsub}` (ʀᴇǫᴜᴇsᴛ: {request_enabled}, ᴛɪᴍᴇʀ: {timer_enabled})
 ›› **ᴅʙ ᴄʜᴀɴɴᴇʟs:** `{total_db_channels}` (ᴘʀɪᴍᴀʀʏ: `{primary_db}`)
+›› **ᴘʀᴇᴍɪᴜᴍ ᴜsᴇʀs:** `{len(premium_users)}` (ᴘᴀɪᴅ + ᴛᴏᴋᴇɴ)
+›› **ᴀᴄᴛɪᴠᴇ ᴛᴏᴋᴇɴs:** `{token_stats.get('active_tokens', 0)}`
 ›› **ᴀᴜᴛᴏ ᴅᴇʟᴇᴛᴇ ᴛɪᴍᴇʀ:** `{client.auto_del}`
 ›› **ᴘʀᴏᴛᴇᴄᴛ ᴄᴏɴᴛᴇɴᴛ:** `{"✓ ᴛʀᴜᴇ" if client.protect else "✗ ꜰᴀʟsᴇ"}`
-›› **ᴅɪsᴀʙʟᴇ ʙᴜᴛᴛᴏɴ:** `{"✓ ᴛʀᴜᴇ" if client.disable_btn else "✗ ꜰᴀʟsᴇ"}`
 ›› **ғʀᴇᴇ ᴀᴄᴄᴇss:** `{"✓ ᴇɴᴀʙʟᴇᴅ" if FREE_ACCESS_ENABLED else "✗ ᴅɪsᴀʙʟᴇᴅ"}` ({TOKEN_VALIDITY_HOURS}ʜ)
-›› **ᴀᴄᴛɪᴠᴇ ᴛᴏᴋᴇɴs:** `{token_stats.get('active_tokens', 0)}`
-›› **ʀᴇᴘʟʏ ᴛᴇxᴛ:** `{client.reply_text[:20] + '...' if len(client.reply_text) > 20 else client.reply_text if client.reply_text else 'ɴᴏɴᴇ'}`
-›› **ᴀᴅᴍɪɴs:** `{len(client.admins)}`
-›› **sʜᴏʀᴛɴᴇʀ ᴜʀʟ:** `{getattr(client, 'short_url', 'ɴᴏᴛ sᴇᴛ')}`
-›› **ᴛᴜᴛᴏʀɪᴀʟ ʟɪɴᴋ:** `{getattr(client, 'tutorial_link', 'ɴᴏᴛ sᴇᴛ')}`
 
 __ᴜsᴇ ɴᴀᴠɪɢᴀᴛɪᴏɴ ʙᴜᴛᴛᴏɴs ᴛᴏ ᴍᴀɴᴀɢᴇ sᴇᴛᴛɪɴɢs!__
     """
     reply_markup = InlineKeyboardMarkup([
         [InlineKeyboardButton('ꜰꜱᴜʙ ᴄʜᴀɴɴᴇʟꜱ', 'fsub'), InlineKeyboardButton('ᴅʙ ᴄʜᴀɴɴᴇʟꜱ', 'db_channels')],
-        [InlineKeyboardButton('ᴀᴅᴍɪɴꜱ', 'admins'), InlineKeyboardButton('ᴛᴏᴋᴇɴ ᴀᴄᴄᴇss', 'token_access')],
+        [InlineKeyboardButton('ᴘʀᴇᴍɪᴜᴍ ᴜsᴇʀs', 'premium_users'), InlineKeyboardButton('ᴛᴏᴋᴇɴ ᴀᴄᴄᴇss', 'token_access')],
         [InlineKeyboardButton('ʜᴏᴍᴇ', 'home'), InlineKeyboardButton('›› ɴᴇxᴛ', 'settings_page_2')]
     ])
     await query.message.edit_text(msg, reply_markup=reply_markup)
@@ -623,4 +620,58 @@ async def toggle_free_access(client, query):
     
     # Refresh the token access page
     await token_access(client, query)
+    return
+
+#===============================================================#
+
+@Client.on_callback_query(filters.regex("^premium_users$"))
+async def premium_users(client, query):
+    """Show all premium users"""
+    if query.from_user.id != OWNER_ID:
+        return await query.answer('✗ ᴏɴʟʏ ᴏᴡɴᴇʀ ᴄᴀɴ ᴜsᴇ ᴛʜɪs!', show_alert=True)
+    
+    await query.answer()
+    
+    # Get premium users (paid)
+    premium_users_list = await client.mongodb.get_pros_list()
+    
+    # Get token access users
+    from config import TOKEN_VALIDITY_HOURS
+    token_stats = await client.mongodb.get_token_stats()
+    
+    msg = f"""<blockquote>✦ ᴘʀᴇᴍɪᴜᴍ ᴜsᴇʀs ʟɪsᴛ</blockquote>
+››  **ᴛᴏᴛᴀʟ ᴘʀᴇᴍɪᴜᴍ:** `{len(premium_users_list)}` (ᴘᴀɪᴅ)
+›› **ᴀᴄᴛɪᴠᴇ ᴛᴏᴋᴇɴs:** `{token_stats.get('active_tokens', 0)}` (ғʀᴇᴇ ᴀᴄᴄᴇss)
+
+**ᴘᴀɪᴅ ᴘʀᴇᴍɪᴜᴍ ᴜsᴇʀs:**
+"""
+    
+    if premium_users_list:
+        from datetime import datetime
+        for user_id in premium_users_list[:20]:  # Show first 20
+            try:
+                expiry = await client.mongodb.get_expiry_date(user_id)
+                if expiry:
+                    days_left = (expiry - datetime.now()).days
+                    expiry_str = f"{days_left}ᴅ" if days_left > 0 else "ᴇxᴘɪʀᴇᴅ"
+                else:
+                    expiry_str = "ᴘᴇʀᴍᴀɴᴇɴᴛ"
+                
+                msg += f"• `{user_id}` - {expiry_str}\n"
+            except:
+                msg += f"• `{user_id}` - ᴜɴᴋɴᴏᴡɴ\n"
+        
+        if len(premium_users_list) > 20:
+            msg += f"\n_...ᴀɴᴅ {len(premium_users_list) - 20} ᴍᴏʀᴇ_"
+    else:
+        msg += "_ɴᴏ ᴘᴀɪᴅ ᴘʀᴇᴍɪᴜᴍ ᴜsᴇʀs_"
+    
+    msg += "\n\n__ᴜsᴇ /addpremium ᴛᴏ ᴀᴅᴅ ᴘʀᴇᴍɪᴜᴍ ᴜsᴇʀs__"
+    
+    reply_markup = InlineKeyboardMarkup([
+        [InlineKeyboardButton('🔄 ʀᴇғʀᴇsʜ', 'premium_users')],
+        [InlineKeyboardButton('‹ ʙᴀᴄᴋ', 'settings')]
+    ])
+    
+    await query.message.edit_text(msg, reply_markup=reply_markup)
     return
