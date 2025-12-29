@@ -578,3 +578,49 @@ __Enter new link of fsub image or send the photo, or wait for 60 second timeout 
             return await query.message.edit_text("**Invalid Photo or Link format!!**\n__If you're sending the link of any image it must starts with either 'http' or 'https'!__", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('◂ ʙᴀᴄᴋ', 'photos')]]))
     except ListenerTimeout:
         return await query.message.edit_text("**Timeout, try again!**", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('◂ ʙᴀᴄᴋ', 'photos')]]))
+
+#===============================================================#
+
+@Client.on_callback_query(filters.regex("^token_access$"))
+async def token_access(client, query):
+    """Token Access Settings"""
+    from config import FREE_ACCESS_ENABLED, TOKEN_VALIDITY_HOURS
+    token_stats = await client.mongodb.get_token_stats()
+    
+    msg = f"""<blockquote>✦ ᴛᴏᴋᴇɴ ᴀᴄᴄᴇss sᴇᴛᴛɪɴɢs</blockquote>
+›› **ғʀᴇᴇ ᴀᴄᴄᴇss:** `{"✓ ᴇɴᴀʙʟᴇᴅ" if FREE_ACCESS_ENABLED else "✗ ᴅɪsᴀʙʟᴇᴅ"}`
+›› **ᴛᴏᴋᴇɴ ᴠᴀʟɪᴅɪᴛʏ:** `{TOKEN_VALIDITY_HOURS} ʜᴏᴜʀs`
+›› **ᴛᴏᴛᴀʟ ᴛᴏᴋᴇɴs:** `{token_stats.get('total_tokens', 0)}`
+›› **ᴀᴄᴛɪᴠᴇ ᴛᴏᴋᴇɴs:** `{token_stats.get('active_tokens', 0)}`
+›› **ᴇxᴘɪʀᴇᴅ ᴛᴏᴋᴇɴs:** `{token_stats.get('expired_tokens', 0)}`
+
+__ᴜsᴇ ᴛʜᴇ ʙᴜᴛᴛᴏɴs ʙᴇʟᴏᴡ ᴛᴏ ᴍᴀɴᴀɢᴇ ᴛᴏᴋᴇɴ sᴇᴛᴛɪɴɢs!__
+
+**ɴᴏᴛᴇ:** ᴛᴏ ᴄʜᴀɴɢᴇ ᴠᴀʟɪᴅɪᴛʏ ʜᴏᴜʀs, ᴇᴅɪᴛ `TOKEN_VALIDITY_HOURS` ɪɴ ᴄᴏɴғɪɢ.ᴘʏ"""
+    
+    reply_markup = InlineKeyboardMarkup([
+        [InlineKeyboardButton(f'{"✗ ᴅɪsᴀʙʟᴇ" if FREE_ACCESS_ENABLED else "✓ ᴇɴᴀʙʟᴇ"} ғʀᴇᴇ ᴀᴄᴄᴇss', 'toggle_free_access')],
+        [InlineKeyboardButton('🔄 ʀᴇғʀᴇsʜ sᴛᴀᴛs', 'token_access')],
+        [InlineKeyboardButton('‹ ʙᴀᴄᴋ', 'settings')]
+    ])
+    
+    await query.message.edit_text(msg, reply_markup=reply_markup)
+    return
+
+#===============================================================#
+
+@Client.on_callback_query(filters.regex("^toggle_free_access$"))
+async def toggle_free_access(client, query):
+    """Toggle free access on/off"""
+    if query.from_user.id != OWNER_ID:
+        return await query.answer('✗ ᴏɴʟʏ ᴏᴡɴᴇʀ ᴄᴀɴ ᴜsᴇ ᴛʜɪs!', show_alert=True)
+    
+    import config
+    config.FREE_ACCESS_ENABLED = not config.FREE_ACCESS_ENABLED
+    
+    status = "ᴇɴᴀʙʟᴇᴅ" if config.FREE_ACCESS_ENABLED else "ᴅɪsᴀʙʟᴇᴅ"
+    await query.answer(f'ғʀᴇᴇ ᴀᴄᴄᴇss {status}!', show_alert=True)
+    
+    # Refresh the token access page
+    await token_access(client, query)
+    return
