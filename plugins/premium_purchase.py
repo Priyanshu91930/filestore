@@ -188,7 +188,7 @@ async def get_free_access_callback(client: Client, callback_query: CallbackQuery
     """Show free access token verification"""
     await callback_query.answer()
     
-    from config import TOKEN_VALIDITY_HOURS, TOKEN_SHORTLINK_URL, TOKEN_SHORTLINK_API
+    from config import TOKEN_VALIDITY_HOURS
     from plugins.shortner import get_short
     import time
     
@@ -198,26 +198,24 @@ async def get_free_access_callback(client: Client, callback_query: CallbackQuery
     token_id = f"token_{user_id}_{int(time.time())}"
     token_link = f"https://t.me/{client.username}?start={token_id}"
     
-    # Create shortlink for token verification
+    # Create shortlink for token verification using database-loaded settings
+    # Settings are loaded in bot.py from database (client.short_url, client.short_api)
     try:
-        # Ensure shortlink settings are available
-        if not hasattr(client, 'short_url') or not hasattr(client, 'short_api'):
-            client.short_url = TOKEN_SHORTLINK_URL
-            client.short_api = TOKEN_SHORTLINK_API
-        
         short_link = get_short(token_link, client)
         
         # Verify shortlink was actually generated (not just returned original URL)
         if short_link == token_link:
             # Shortlink generation failed, show error
+            shortlink_url = getattr(client, 'short_url', 'not configured')
             await callback_query.message.edit_text(
                 "❌ **Shortlink Service Error**\n\n"
                 "The shortlink service is currently unavailable. "
                 "Please contact the admin or try again later.\n\n"
-                f"**Error:** Shortlink API ({TOKEN_SHORTLINK_URL}) is not responding.",
+                f"**Error:** Shortlink API ({shortlink_url}) is not responding.\n\n"
+                "**Admin:** Configure shortlink via /shortner command",
                 reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("« Back", callback_data="close")]])
             )
-            client.LOGGER(__name__, client.name).error(f"Shortlink generation failed for token verification. URL: {TOKEN_SHORTLINK_URL}, API: {TOKEN_SHORTLINK_API[:10]}...")
+            client.LOGGER(__name__, client.name).error(f"Shortlink generation failed for token verification. URL: {shortlink_url}")
             return
             
     except Exception as e:
