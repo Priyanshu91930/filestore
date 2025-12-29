@@ -27,16 +27,13 @@ async def settings(client, query):
 ›› **ᴀᴅᴍɪɴs:** `{len(client.admins)}`
 ›› **sʜᴏʀᴛɴᴇʀ ᴜʀʟ:** `{getattr(client, 'short_url', 'ɴᴏᴛ sᴇᴛ')}`
 ›› **ᴛᴜᴛᴏʀɪᴀʟ ʟɪɴᴋ:** `{getattr(client, 'tutorial_link', 'ɴᴏᴛ sᴇᴛ')}`
-›› **sᴛᴀʀᴛ ᴍᴇssᴀɢᴇ:**
-<pre>{client.messages.get('START', 'ᴇᴍᴘᴛʏ')}</pre>
-›› **sᴛᴀʀᴛ ɪᴍᴀɢᴇ:** `{bool(client.messages.get('START_PHOTO', ''))}`
-›› **ꜰᴏʀᴄᴇ sᴜʙ ᴍᴇssᴀɢᴇ:**
-<pre>{client.messages.get('FSUB', 'ᴇᴍᴘᴛʏ')}</pre>
-›› **ꜰᴏʀᴄᴇ sᴜʙ ɪᴍᴀɢᴇ:** `{bool(client.messages.get('FSUB_PHOTO', ''))}`
-›› **ᴀʙᴏᴜᴛ ᴍᴇssᴀɢᴇ:**
-<pre>{client.messages.get('ABOUT', 'ᴇᴍᴘᴛʏ')}</pre>
-›› **ʀᴇᴘʟʏ ᴍᴇssᴀɢᴇ:**
-<pre>{client.reply_text}</pre>
+›› **sᴛᴀʀᴛ ᴍᴇssᴀɢᴇ:** `{"✓ sᴇᴛ" if client.messages.get('START') else "✗ ɴᴏᴛ sᴇᴛ"}`
+›› **sᴛᴀʀᴛ ɪᴍᴀɢᴇ:** `{"✓ sᴇᴛ" if client.messages.get('START_PHOTO', '') else "✗ ɴᴏᴛ sᴇᴛ"}`
+›› **ꜰᴏʀᴄᴇ sᴜʙ ᴍᴇssᴀɢᴇ:** `{"✓ sᴇᴛ" if client.messages.get('FSUB') else "✗ ɴᴏᴛ sᴇᴛ"}`
+›› **ꜰᴏʀᴄᴇ sᴜʙ ɪᴍᴀɢᴇ:** `{"✓ sᴇᴛ" if client.messages.get('FSUB_PHOTO', '') else "✗ ɴᴏᴛ sᴇᴛ"}`
+›› **ᴀʙᴏᴜᴛ ᴍᴇssᴀɢᴇ:** `{"✓ sᴇᴛ" if client.messages.get('ABOUT') else "✗ ɴᴏᴛ sᴇᴛ"}`
+
+__ᴜsᴇ 'ᴛᴇxᴛs' ʙᴜᴛᴛᴏɴ ᴛᴏ ᴠɪᴇᴡ/ᴇᴅɪᴛ ғᴜʟʟ ᴍᴇssᴀɢᴇs!__
     """
     reply_markup = InlineKeyboardMarkup([
         [InlineKeyboardButton('ꜰꜱᴜʙ ᴄʜᴀɴɴᴇʟꜱ', 'fsub'), InlineKeyboardButton('ᴅʙ ᴄʜᴀɴɴᴇʟꜱ', 'db_channels')],
@@ -69,16 +66,13 @@ async def settings_page_2(client, query):
 ›› **ᴀᴅᴍɪɴs:** `{len(client.admins)}`
 ›› **sʜᴏʀᴛɴᴇʀ ᴜʀʟ:** `{getattr(client, 'short_url', 'ɴᴏᴛ sᴇᴛ')}`
 ›› **ᴛᴜᴛᴏʀɪᴀʟ ʟɪɴᴋ:** `{getattr(client, 'tutorial_link', 'ɴᴏᴛ sᴇᴛ')}`
-›› **sᴛᴀʀᴛ ᴍᴇssᴀɢᴇ:**
-<pre>{client.messages.get('START', 'ᴇᴍᴘᴛʏ')}</pre>
-›› **sᴛᴀʀᴛ ɪᴍᴀɢᴇ:** `{bool(client.messages.get('START_PHOTO', ''))}`
-›› **ꜰᴏʀᴄᴇ sᴜʙ ᴍᴇssᴀɢᴇ:**
-<pre>{client.messages.get('FSUB', 'ᴇᴍᴘᴛʏ')}</pre>
-›› **ꜰᴏʀᴄᴇ sᴜʙ ɪᴍᴀɢᴇ:** `{bool(client.messages.get('FSUB_PHOTO', ''))}`
-›› **ᴀʙᴏᴜᴛ ᴍᴇssᴀɢᴇ:**
-<pre>{client.messages.get('ABOUT', 'ᴇᴍᴘᴛʏ')}</pre>
-›› **ʀᴇᴘʟʏ ᴍᴇssᴀɢᴇ:**
-<pre>{client.reply_text}</pre>
+›› **sᴛᴀʀᴛ ᴍᴇssᴀɢᴇ:** `{"✓ sᴇᴛ" if client.messages.get('START') else "✗ ɴᴏᴛ sᴇᴛ"}`
+›› **sᴛᴀʀᴛ ɪᴍᴀɢᴇ:** `{"✓ sᴇᴛ" if client.messages.get('START_PHOTO', '') else "✗ ɴᴏᴛ sᴇᴛ"}`
+›› **ꜰᴏʀᴄᴇ sᴜʙ ᴍᴇssᴀɢᴇ:** `{"✓ sᴇᴛ" if client.messages.get('FSUB') else "✗ ɴᴏᴛ sᴇᴛ"}`
+›› **ꜰᴏʀᴄᴇ sᴜʙ ɪᴍᴀɢᴇ:** `{"✓ sᴇᴛ" if client.messages.get('FSUB_PHOTO', '') else "✗ ɴᴏᴛ sᴇᴛ"}`
+›› **ᴀʙᴏᴜᴛ ᴍᴇssᴀɢᴇ:** `{"✓ sᴇᴛ" if client.messages.get('ABOUT') else "✗ ɴᴏᴛ sᴇᴛ"}`
+
+__ᴜsᴇ 'ᴛᴇxᴛs' ʙᴜᴛᴛᴏɴ ᴛᴏ ᴠɪᴇᴡ/ᴇᴅɪᴛ ғᴜʟʟ ᴍᴇssᴀɢᴇs!__
     """
     reply_markup = InlineKeyboardMarkup([
         [InlineKeyboardButton('ᴘʀᴏᴛᴇᴄᴛ ᴄᴏɴᴛᴇɴᴛ', 'protect'), InlineKeyboardButton('ᴘʜᴏᴛᴏs', 'photos')],
