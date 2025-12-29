@@ -17,27 +17,28 @@ async def settings(client, query):
     total_db_channels = len(getattr(client, 'db_channels', {}))
     primary_db = getattr(client, 'primary_db_channel', client.db)
     
+    # Get token settings
+    from config import FREE_ACCESS_ENABLED, TOKEN_VALIDITY_HOURS
+    token_stats = await client.mongodb.get_token_stats()
+    
     msg = f"""<blockquote>✦ sᴇᴛᴛɪɴɢs ᴏғ @{client.username}</blockquote>
 ›› **ꜰꜱᴜʙ ᴄʜᴀɴɴᴇʟs:** `{total_fsub}` (ʀᴇǫᴜᴇsᴛ: {request_enabled}, ᴛɪᴍᴇʀ: {timer_enabled})
 ›› **ᴅʙ ᴄʜᴀɴɴᴇʟs:** `{total_db_channels}` (ᴘʀɪᴍᴀʀʏ: `{primary_db}`)
 ›› **ᴀᴜᴛᴏ ᴅᴇʟᴇᴛᴇ ᴛɪᴍᴇʀ:** `{client.auto_del}`
 ›› **ᴘʀᴏᴛᴇᴄᴛ ᴄᴏɴᴛᴇɴᴛ:** `{"✓ ᴛʀᴜᴇ" if client.protect else "✗ ꜰᴀʟsᴇ"}`
 ›› **ᴅɪsᴀʙʟᴇ ʙᴜᴛᴛᴏɴ:** `{"✓ ᴛʀᴜᴇ" if client.disable_btn else "✗ ꜰᴀʟsᴇ"}`
-›› **ʀᴇᴘʟʏ ᴛᴇxᴛ:** `{client.reply_text if client.reply_text else 'ɴᴏɴᴇ'}`
+›› **ғʀᴇᴇ ᴀᴄᴄᴇss:** `{"✓ ᴇɴᴀʙʟᴇᴅ" if FREE_ACCESS_ENABLED else "✗ ᴅɪsᴀʙʟᴇᴅ"}` ({TOKEN_VALIDITY_HOURS}ʜ)
+›› **ᴀᴄᴛɪᴠᴇ ᴛᴏᴋᴇɴs:** `{token_stats.get('active_tokens', 0)}`
+›› **ʀᴇᴘʟʏ ᴛᴇxᴛ:** `{client.reply_text[:20] + '...' if len(client.reply_text) > 20 else client.reply_text if client.reply_text else 'ɴᴏɴᴇ'}`
 ›› **ᴀᴅᴍɪɴs:** `{len(client.admins)}`
 ›› **sʜᴏʀᴛɴᴇʀ ᴜʀʟ:** `{getattr(client, 'short_url', 'ɴᴏᴛ sᴇᴛ')}`
 ›› **ᴛᴜᴛᴏʀɪᴀʟ ʟɪɴᴋ:** `{getattr(client, 'tutorial_link', 'ɴᴏᴛ sᴇᴛ')}`
-›› **sᴛᴀʀᴛ ᴍᴇssᴀɢᴇ:** `{"✓ sᴇᴛ" if client.messages.get('START') else "✗ ɴᴏᴛ sᴇᴛ"}`
-›› **sᴛᴀʀᴛ ɪᴍᴀɢᴇ:** `{"✓ sᴇᴛ" if client.messages.get('START_PHOTO', '') else "✗ ɴᴏᴛ sᴇᴛ"}`
-›› **ꜰᴏʀᴄᴇ sᴜʙ ᴍᴇssᴀɢᴇ:** `{"✓ sᴇᴛ" if client.messages.get('FSUB') else "✗ ɴᴏᴛ sᴇᴛ"}`
-›› **ꜰᴏʀᴄᴇ sᴜʙ ɪᴍᴀɢᴇ:** `{"✓ sᴇᴛ" if client.messages.get('FSUB_PHOTO', '') else "✗ ɴᴏᴛ sᴇᴛ"}`
-›› **ᴀʙᴏᴜᴛ ᴍᴇssᴀɢᴇ:** `{"✓ sᴇᴛ" if client.messages.get('ABOUT') else "✗ ɴᴏᴛ sᴇᴛ"}`
 
-__ᴜsᴇ 'ᴛᴇxᴛs' ʙᴜᴛᴛᴏɴ ᴛᴏ ᴠɪᴇᴡ/ᴇᴅɪᴛ ғᴜʟʟ ᴍᴇssᴀɢᴇs!__
+__ᴜsᴇ ɴᴀᴠɪɢᴀᴛɪᴏɴ ʙᴜᴛᴛᴏɴs ᴛᴏ ᴍᴀɴᴀɢᴇ sᴇᴛᴛɪɴɢs!__
     """
     reply_markup = InlineKeyboardMarkup([
         [InlineKeyboardButton('ꜰꜱᴜʙ ᴄʜᴀɴɴᴇʟꜱ', 'fsub'), InlineKeyboardButton('ᴅʙ ᴄʜᴀɴɴᴇʟꜱ', 'db_channels')],
-        [InlineKeyboardButton('ᴀᴅᴍɪɴꜱ', 'admins'), InlineKeyboardButton('ᴀᴜᴛᴏ ᴅᴇʟᴇᴛᴇ', 'auto_del')],
+        [InlineKeyboardButton('ᴀᴅᴍɪɴꜱ', 'admins'), InlineKeyboardButton('ᴛᴏᴋᴇɴ ᴀᴄᴄᴇss', 'token_access')],
         [InlineKeyboardButton('ʜᴏᴍᴇ', 'home'), InlineKeyboardButton('›› ɴᴇxᴛ', 'settings_page_2')]
     ])
     await query.message.edit_text(msg, reply_markup=reply_markup)
@@ -56,23 +57,21 @@ async def settings_page_2(client, query):
     total_db_channels = len(getattr(client, 'db_channels', {}))
     primary_db = getattr(client, 'primary_db_channel', client.db)
     
-    msg = f"""<blockquote>✦ sᴇᴛᴛɪɴɢs ᴏғ @{client.username}</blockquote>
-›› **ꜰsᴜʙ ᴄʜᴀɴɴᴇʟs:** `{total_fsub}` (ʀᴇǫᴜᴇsᴛ: {request_enabled}, ᴛɪᴍᴇʀ: {timer_enabled})
-›› **ᴅʙ ᴄʜᴀɴɴᴇʟs:** `{total_db_channels}` (ᴘʀɪᴍᴀʀʏ: `{primary_db}`)
-›› **ᴀᴜᴛᴏ ᴅᴇʟᴇᴛᴇ ᴛɪᴍᴇʀ:** `{client.auto_del}`
+    # Get token settings
+    from config import FREE_ACCESS_ENABLED, TOKEN_VALIDITY_HOURS
+    token_stats = await client.mongodb.get_token_stats()
+    
+    msg = f"""<blockquote>✦ sᴇᴛᴛɪɴɢs ᴏғ @{client.username} (ᴘᴀɢᴇ 2)</blockquote>
 ›› **ᴘʀᴏᴛᴇᴄᴛ ᴄᴏɴᴛᴇɴᴛ:** `{"✓ ᴛʀᴜᴇ" if client.protect else "✗ ꜰᴀʟsᴇ"}`
 ›› **ᴅɪsᴀʙʟᴇ ʙᴜᴛᴛᴏɴ:** `{"✓ ᴛʀᴜᴇ" if client.disable_btn else "✗ ꜰᴀʟsᴇ"}`
-›› **ʀᴇᴘʟʏ ᴛᴇxᴛ:** `{client.reply_text if client.reply_text else 'ɴᴏɴᴇ'}`
-›› **ᴀᴅᴍɪɴs:** `{len(client.admins)}`
-›› **sʜᴏʀᴛɴᴇʀ ᴜʀʟ:** `{getattr(client, 'short_url', 'ɴᴏᴛ sᴇᴛ')}`
-›› **ᴛᴜᴛᴏʀɪᴀʟ ʟɪɴᴋ:** `{getattr(client, 'tutorial_link', 'ɴᴏᴛ sᴇᴛ')}`
+›› **ғʀᴇᴇ ᴀᴄᴄᴇss:** `{"✓ ᴇɴᴀʙʟᴇᴅ" if FREE_ACCESS_ENABLED else "✗ ᴅɪsᴀʙʟᴇᴅ"}` ({TOKEN_VALIDITY_HOURS}ʜ)
+›› **ᴀᴄᴛɪᴠᴇ ᴛᴏᴋᴇɴs:** `{token_stats.get('active_tokens', 0)}` / `{token_stats.get('total_tokens', 0)}`
+›› **sʜᴏʀᴛɴᴇʀ:** `{getattr(client, 'short_url', 'ɴᴏᴛ sᴇᴛ')}`
 ›› **sᴛᴀʀᴛ ᴍᴇssᴀɢᴇ:** `{"✓ sᴇᴛ" if client.messages.get('START') else "✗ ɴᴏᴛ sᴇᴛ"}`
-›› **sᴛᴀʀᴛ ɪᴍᴀɢᴇ:** `{"✓ sᴇᴛ" if client.messages.get('START_PHOTO', '') else "✗ ɴᴏᴛ sᴇᴛ"}`
 ›› **ꜰᴏʀᴄᴇ sᴜʙ ᴍᴇssᴀɢᴇ:** `{"✓ sᴇᴛ" if client.messages.get('FSUB') else "✗ ɴᴏᴛ sᴇᴛ"}`
-›› **ꜰᴏʀᴄᴇ sᴜʙ ɪᴍᴀɢᴇ:** `{"✓ sᴇᴛ" if client.messages.get('FSUB_PHOTO', '') else "✗ ɴᴏᴛ sᴇᴛ"}`
 ›› **ᴀʙᴏᴜᴛ ᴍᴇssᴀɢᴇ:** `{"✓ sᴇᴛ" if client.messages.get('ABOUT') else "✗ ɴᴏᴛ sᴇᴛ"}`
 
-__ᴜsᴇ 'ᴛᴇxᴛs' ʙᴜᴛᴛᴏɴ ᴛᴏ ᴠɪᴇᴡ/ᴇᴅɪᴛ ғᴜʟʟ ᴍᴇssᴀɢᴇs!__
+__ᴜsᴇ 'ᴛᴇxᴛs' ᴀɴᴅ 'ᴘʜᴏᴛᴏs' ᴛᴏ ᴍᴀɴᴀɢᴇ ᴍᴇssᴀɢᴇs!__
     """
     reply_markup = InlineKeyboardMarkup([
         [InlineKeyboardButton('ᴘʀᴏᴛᴇᴄᴛ ᴄᴏɴᴛᴇɴᴛ', 'protect'), InlineKeyboardButton('ᴘʜᴏᴛᴏs', 'photos')],
