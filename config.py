@@ -42,7 +42,7 @@ PROTECT = True
 PREMIUM_ONLY_MODE = True  # Enable/disable premium-only access
 UPI_ID = "paytmqrslhta2csqu@paytm"  # Your UPI ID
 PAYMENT_QR = "https://graph.org/file/90fc99d53f517bca4bf81-346bf43a3a17b0a425.jpg"  # Google Pay/BharatPe QR code URL
-PAYMENT_ADMIN = "@sacredNormie"  # Admin username for payment confirmation
+PAYMENT_ADMIN = "@MissFilo_bot"  # Admin username for payment confirmation
 
 # Premium Plans (duration_days: price_inr)
 PREMIUM_PLANS = {
